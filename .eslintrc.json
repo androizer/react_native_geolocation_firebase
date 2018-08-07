@@ -12,6 +12,11 @@
     "react/destructuring-assignment": "never",
     "no-underscore-dangle": 0,
     "no-console": "off",
-    "comma-dangle": "off"
+    "comma-dangle": "off",
+    "no-unused-vars": "warn",
+    "react/no-unused-state": "warn",
+    "camelcase": "warn",
+    "global-require": "off",
+    "no-use-before-define": ["warn", { "variables": false }]
   }
 }

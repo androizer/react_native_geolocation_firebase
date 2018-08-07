@@ -1,0 +1,17 @@
+{
+  "env": {
+    "node": true,
+    "browser": true,
+    "es6": true,
+    "jest": true
+  },
+  "parser": "babel-eslint",
+  "extends": "airbnb",
+  "rules": {
+    "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }],
+    "react/destructuring-assignment": "never",
+    "no-underscore-dangle": 0,
+    "no-console": "off",
+    "comma-dangle": "off"
+  }
+}

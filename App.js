@@ -108,10 +108,12 @@ export default class App extends Component {
     }, 500);
     BackHandler.addEventListener('hardwareBackPress', this.handleBackPress);
     // add location to the database.
-    setTimeout(() => {
-      console.log('Firebase UserID: ', Backend.getUid());
-      Backend.sendLocation(this.state.regionAnimated);
-    }, 4000);
+    const intervalId = setInterval(() => {
+      if (Backend.getUid().toString() !== '') {
+        Backend.sendLocation(this.state.regionAnimated);
+        clearInterval(intervalId);
+      }
+    }, 1000);
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -170,25 +172,26 @@ export default class App extends Component {
   };
 
   getDirection = async () => {
-    try {
-      // direction from new delhi to mumbai
-      const resp = await fetch(
-        'https://maps.googleapis.com/maps/api/directions/json?origin=28.6139,77.2090&destination=19.0760,72.8777&key=AIzaSyA6mytrYC0p9P75O_ZGntD_ycg61kvYkWU'
-      );
-      const respJson = await resp.json();
-      const points = Polyline.decode(
-        respJson.routes[0].overview_polyline.points
-      );
-      const coords = points.map(point => ({
-        latitude: point[0],
-        longitude: point[1]
-      }));
-      this.setState({ coords });
-      return coords;
-    } catch (error) {
-      console.log(error);
-      return error;
-    }
+    // direction from new delhi to mumbai
+    await fetch(
+      'https://maps.googleapis.com/maps/api/directions/json?origin=28.6139,77.2090&destination=19.0760,72.8777&key=AIzaSyA6mytrYC0p9P75O_ZGntD_ycg61kvYkWU'
+    )
+      .then(response => response.json())
+      .then((responseJson) => {
+        const points = Polyline.decode(
+          responseJson.routes[0].overview_polyline.points
+        );
+        const coords = points.map(point => ({
+          latitude: point[0],
+          longitude: point[1]
+        }));
+        this.setState({ coords });
+        return coords;
+      })
+      .catch((error) => {
+        console.log(error.message);
+        throw error.message;
+      });
   };
 
   getLiveLocation = () => {
@@ -337,7 +340,7 @@ export default class App extends Component {
   };
 
   handleBackPress = () => {
-    if (this.state.isHidden === false && this.searchBar.isFocused()) {
+    if (!this.state.isHidden && this.searchBar.isFocused()) {
       this.toggleSubView();
       this.searchBar.blur();
       this.searchBar.clear();
@@ -373,8 +376,7 @@ export default class App extends Component {
         cancelable: true
       }
     );
-
-    return false;
+    return true;
     // false means exit the app.
   };
 

@@ -111,7 +111,7 @@ export default class App extends Component {
     // add location to the database.
     const intervalId = setInterval(() => {
       if (Backend.getUid().toString() !== '') {
-        Backend.sendLocation(this.state.regionAnimated);
+        Backend.sendLocation(this.state.regionAnimated, this.uniqueID);
         clearInterval(intervalId);
       }
     }, 1000);
@@ -311,9 +311,11 @@ export default class App extends Component {
 
   loadNewLocations = () => {
     Backend.loadNewLocations((location) => {
-      this.setState(prevState => ({
-        usersLocations: prevState.usersLocations.concat(location)
-      }));
+      if (location.uid !== this.uniqueID) {
+        this.setState(prevState => ({
+          usersLocations: prevState.usersLocations.concat(location)
+        }));
+      }
     });
   };
 

@@ -5,6 +5,8 @@ class Backend {
 
   locationRef = null;
 
+  messageRef = null;
+
   // initialize firebase Backend
   constructor() {
     firebase.initializeApp({
@@ -49,6 +51,7 @@ class Backend {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         },
+        uid: location.uid
       });
     };
     this.locationRef.limitToLast(20).on('child_added', onReceive);
@@ -69,12 +72,13 @@ class Backend {
   }
 
   // send the location to the Backend.
-  sendLocation(location) {
+  sendLocation(location, uniqueID) {
     this.locationRef.child(this.getUid().toString()).set({
       coords: {
         latitude: location.latitude,
         longitude: location.longitude,
       },
+      uid: uniqueID
     });
   }
 
@@ -86,10 +90,32 @@ class Backend {
     });
   }
 
+  // send the messages to the Backend.
+  loadNewMessages(callback) {
+    this.messageRef = firebase.database().ref('chats');
+    this.messageRef.off();
+    const onReceive = (data) => {
+      const message = data.val();
+      callback({
+        _id: data.key,
+        text: message.text,
+        createdAt: new Date(message.createdAt),
+        user: {
+          _id: message.user._id,
+          name: message.user.name
+        }
+      });
+    };
+    this.messageRef.limitToLast(20).on('child_added', onReceive);
+  }
+
   // close the connection to the Backend
   closeTracking() {
     if (this.locationRef) {
       this.locationRef.off();
+    }
+    if (this.messageRef) {
+      this.messageRef.off();
     }
   }
 }

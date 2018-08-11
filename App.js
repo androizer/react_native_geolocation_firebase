@@ -107,6 +107,7 @@ export default class App extends Component {
       this.mapView.animateToRegion(this.state.regionAnimated, 1000);
     }, 500);
     BackHandler.addEventListener('hardwareBackPress', this.handleBackPress);
+    BackHandler.addEventListener('hardwareBackPress', this.handleBackPress);
     // add location to the database.
     const intervalId = setInterval(() => {
       if (Backend.getUid().toString() !== '') {
@@ -130,6 +131,7 @@ export default class App extends Component {
 
   componentWillUnmount() {
     navigator.geolocation.clearWatch(this.watchId);
+    BackHandler.removeEventListener('hardwareBackPress', this.handleBackPress);
   }
 
   getGeoCode = async (place_id, description, main_text) => {
@@ -250,7 +252,7 @@ export default class App extends Component {
 
   getDeviceInfo = () => {
     this.uniqueID = DeviceInfo.getUniqueID();
-    console.log('Device Uniquue ID: ', this.uniqueID);
+    console.log('Device Unique ID: ', this.uniqueID);
   };
 
   findMe = (source = 'fab') => {
@@ -353,29 +355,28 @@ export default class App extends Component {
       console.log('Search Bar Focused --> True');
       return true;
     }
-    Alert.alert(
-      'Close App!',
-      'Are you sure?',
-      [
-        {
-          text: 'Yes',
-          onPress: () => {
-            console.log('User pressed yes');
-            return false;
+    if (this.state.isHidden && !this.searchBar.isFocused()) {
+      Alert.alert(
+        'Close App!',
+        'Are you sure?',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel'
+          },
+          {
+            text: 'Yes',
+            onPress: () => {
+              console.log('User pressed yes');
+              BackHandler.exitApp();
+            }
           }
-        },
+        ],
         {
-          text: 'Cancel',
-          onPress: () => {
-            console.log('User pressed cancel');
-            return true;
-          }
+          cancelable: true
         }
-      ],
-      {
-        cancelable: true
-      }
-    );
+      );
+    }
     return true;
     // false means exit the app.
   };

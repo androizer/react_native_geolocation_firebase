@@ -1,4 +1,5 @@
 import firebase from 'firebase';
+import cryptoJS from 'crypto-js';
 
 class Backend {
   uid = '';
@@ -73,7 +74,8 @@ class Backend {
 
   // send the location to the Backend.
   sendLocation(location, uniqueID) {
-    this.locationRef.child(this.getUid().toString()).set({
+    const hash = cryptoJS.enc.Base64.stringify(cryptoJS.MD5(uniqueID.toString()));
+    this.locationRef.child(hash).set({
       coords: {
         latitude: location.latitude,
         longitude: location.longitude,

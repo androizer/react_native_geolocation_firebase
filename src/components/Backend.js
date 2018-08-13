@@ -80,6 +80,7 @@ class Backend {
         latitude: location.latitude,
         longitude: location.longitude,
       },
+      status: 'active',
       uid: uniqueID
     });
   }
@@ -90,6 +91,10 @@ class Backend {
       latitude: location.latitude,
       longitude: location.longitude,
     });
+  }
+
+  loadOffLocation(key) {
+    this.locationRef.child(`${key}`).update({ status: 'inactive' });
   }
 
   // send the messages to the Backend.

@@ -98,15 +98,14 @@ export default class App extends Component {
     this.findMe('CWM');
     console.log('<------------ Calling Firebase Backend ------------>');
     this.getDeviceInfo();
-    this.loadNewLocations();
     // this.loadUpdatedLocations();
   }
 
   componentDidMount() {
+    BackHandler.addEventListener('hardwareBackPress', this.handleBackPress);
     setTimeout(() => {
       this.mapView.animateToRegion(this.state.regionAnimated, 1000);
     }, 500);
-    BackHandler.addEventListener('hardwareBackPress', this.handleBackPress);
     // add location to the database.
     const intervalId = setInterval(() => {
       if (Backend.getUid().toString() !== '') {
@@ -282,6 +281,7 @@ export default class App extends Component {
   getDeviceInfo = () => {
     this.uniqueID = DeviceInfo.getUniqueID();
     console.log('Device Unique ID: ', this.uniqueID);
+    this.loadNewLocations();
   };
 
   findMe = (source = 'fab') => {
@@ -340,7 +340,7 @@ export default class App extends Component {
 
   loadNewLocations = () => {
     Backend.loadNewLocations((location) => {
-      if (location.uid === this.uniqueID) {
+      if (location.uid !== this.uniqueID) {
         this.setState(prevState => ({
           usersLocations: prevState.usersLocations.concat(location)
         }));

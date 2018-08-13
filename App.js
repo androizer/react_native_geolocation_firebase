@@ -107,7 +107,6 @@ export default class App extends Component {
       this.mapView.animateToRegion(this.state.regionAnimated, 1000);
     }, 500);
     BackHandler.addEventListener('hardwareBackPress', this.handleBackPress);
-    BackHandler.addEventListener('hardwareBackPress', this.handleBackPress);
     // add location to the database.
     const intervalId = setInterval(() => {
       if (Backend.getUid().toString() !== '') {
@@ -134,9 +133,9 @@ export default class App extends Component {
     BackHandler.removeEventListener('hardwareBackPress', this.handleBackPress);
   }
 
-  getGeoCode = async (place_id, description, main_text) => {
+  getGeoCode = (place_id, description, main_text) => {
     console.log('getGeoCode Method Called');
-    await fetch(
+    fetch(
       `https://maps.googleapis.com/maps/api/place/details/json?placeid=${place_id}&fields=name,geometry,formatted_address&key=AIzaSyA6mytrYC0p9P75O_ZGntD_ycg61kvYkWU`
     )
       .then(response => response.json())
@@ -165,6 +164,20 @@ export default class App extends Component {
             },
             1500
           );
+        } else {
+          Alert.alert(
+            'Error',
+            `${responseJson.error_message}`,
+            [
+              {
+                text: 'OK',
+                style: 'cancel'
+              }
+            ],
+            {
+              cancelable: true
+            }
+          );
         }
       })
       .catch((error) => {
@@ -173,9 +186,9 @@ export default class App extends Component {
       });
   };
 
-  getDirection = async () => {
+  getDirection = () => {
     // direction from new delhi to mumbai
-    await fetch(
+    fetch(
       'https://maps.googleapis.com/maps/api/directions/json?origin=28.6139,77.2090&destination=19.0760,72.8777&key=AIzaSyA6mytrYC0p9P75O_ZGntD_ycg61kvYkWU'
     )
       .then(response => response.json())
@@ -213,41 +226,57 @@ export default class App extends Component {
     );
   };
 
-  getAutoComplete = async (searchText) => {
+  getAutoComplete = (searchText) => {
     this.setState({
       searchText
     });
-    try {
-      const res = await fetch(
-        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${searchText}&types=geocode&language=en&key=AIzaSyA6mytrYC0p9P75O_ZGntD_ycg61kvYkWU`
-      );
-      const resJson = await res.json();
-      const arr = [];
-      if (resJson.status === 'OK') {
-        for (let i = 0; i < resJson.predictions.length; i += 1) {
-          const {
-            id,
-            description,
-            place_id,
-            structured_formatting
-          } = resJson.predictions[i];
-          const { main_text } = structured_formatting;
-          arr.push({
-            description,
-            id,
-            place_id,
-            main_text
-          });
+    fetch(
+      `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${searchText}&types=geocode&language=en&key=AIzaSyA6mytrYC0p9P75O_ZGntD_ycg61kvYkWU`
+    )
+      .then(response => response.json())
+      .then((responseJson) => {
+        const arr = [];
+        if (!responseJson.error_message) {
+          for (let i = 0; i < responseJson.predictions.length; i += 1) {
+            const {
+              id,
+              description,
+              place_id,
+              structured_formatting
+            } = responseJson.predictions[i];
+            const { main_text } = structured_formatting;
+            arr.push({
+              description,
+              id,
+              place_id,
+              main_text
+            });
+          }
+          this.setState(prevState => ({
+            autoCompPredictions: [...arr],
+            fListRefresh: !prevState.fListRefresh
+          }));
+          console.log(this.state.autoCompPredictions);
+        } else {
+          Alert.alert(
+            'Error',
+            `${responseJson.error_message}`,
+            [
+              {
+                text: 'OK',
+                style: 'cancel'
+              }
+            ],
+            {
+              cancelable: true
+            }
+          );
         }
-        this.setState(prevState => ({
-          autoCompPredictions: [...arr],
-          fListRefresh: !prevState.fListRefresh
-        }));
-        console.log(this.state.autoCompPredictions);
-      }
-    } catch (error) {
-      console.log(error.message);
-    }
+      })
+      .catch((error) => {
+        console.log(error.message);
+        throw error;
+      });
   };
 
   getDeviceInfo = () => {
@@ -311,7 +340,7 @@ export default class App extends Component {
 
   loadNewLocations = () => {
     Backend.loadNewLocations((location) => {
-      if (location.uid !== this.uniqueID) {
+      if (location.uid === this.uniqueID) {
         this.setState(prevState => ({
           usersLocations: prevState.usersLocations.concat(location)
         }));
@@ -437,8 +466,62 @@ export default class App extends Component {
               }}
               title={this.state.searchedPlaceMarker.title}
               description={this.state.searchedPlaceMarker.description}
-            />
+            >
+              <MapView.Callout>
+                <View style={styles.callout}>
+                  <Button
+                    title="Click Me!"
+                    onPress={() => {
+                      Alert.alert(
+                        'Alert',
+                        'Button Works',
+                        [
+                          { text: 'OK', style: 'cancel' }
+                        ],
+                        {
+                          cancelable: true
+                        }
+                      );
+                    }}
+                  />
+                </View>
+              </MapView.Callout>
+            </MapView.Marker>
             ) : null}
+          {this.state.usersLocations.length > 0
+            ? this.state.usersLocations.map(location => (
+              <MapView.Marker
+                key={location.uid}
+                coordinate={{
+                  latitude: location.coords.latitude,
+                  longitude: location.coords.longitude
+                }}
+                title={location.uid}
+                pinColor="#ff2e7d32"
+              >
+                <MapView.Callout
+                  onPress={() => console.log('Callout view pressed via callout')}
+                >
+                  <View style={styles.callout}>
+                    <Button
+                      title="Click Me!"
+                      onPress={() => {
+                        Alert.alert(
+                          'Alert',
+                          'Button Works',
+                          [
+                            { text: 'OK', style: 'cancel' }
+                          ],
+                          {
+                            cancelable: true
+                          }
+                        );
+                      }}
+                    />
+                  </View>
+                </MapView.Callout>
+              </MapView.Marker>
+            )) : null}
         </MapView>
         <View
           style={{
